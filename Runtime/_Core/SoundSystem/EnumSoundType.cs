@@ -1,0 +1,45 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public enum EnumSoundType
+{
+    None = 0,
+    TurnSignalOn = 1,
+    TurnSignalOff = 2,
+    HandBrakeOn = 3,
+    HandBrakeOff = 4,
+    TransmissionLever = 5,
+    BeltOn = 6,
+    BeltOff = 7,
+    KeyLockOn = 8,
+    KeyLockTurn = 9,
+    KeyLockOff = 10,
+    PedalPress = 11,
+    PedalRelease = 12,
+    ButtonClick = 13,
+    SeatIn = 14,
+    Exit = 15,
+    CarBrakes = 16,
+    BackwardBeep = 17,
+    EngineStart = 18,
+    EngineTurnOff = 19,
+    KeyInIgnitionLock = 20,
+    CargoTake = 21,
+    BigFalling = 22,
+    ForkUp = 23,
+    Roller = 24,
+    Lever = 25,
+    UI_Click = 26,
+    SafetyDoor = 27,
+    PutContainer = 28,
+    Wzhoooh = 29,
+    EngineStartWithoutCrank = 30,
+    WzhooohFast = 32,
+    Slider = 33,
+    SmallMetalDoor = 34,
+    Horn = 35,
+    MistakeSound = 36,
+    SuccessSound = 37,
+    CriticalSound = 38
+}

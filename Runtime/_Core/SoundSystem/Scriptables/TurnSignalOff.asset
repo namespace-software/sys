@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ebf13b6601b0640968e2cc1f1f8d38, type: 3}
+  m_Name: TurnSignalOff
+  m_EditorClassIdentifier: 
+  soundName: 
+  soundType: 2
+  sounds:
+  - clip: {fileID: 8300000, guid: c765e36fb3403da4494130e19b2eebe2, type: 3}
+    volume: 1
+  - clip: {fileID: 8300000, guid: da25578168382a0419a80feccf34980e, type: 3}
+    volume: 1
