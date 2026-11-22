@@ -72,44 +72,111 @@ namespace _Core.Editor.ScenarioValidator
 
         private static void ValidateSpecific(ValidationContext context, ConditionEntry entry)
         {
-            ConditionBase condition = entry.Condition;
-            UnityEngine.Object target = entry.Target;
-            Type type = condition.GetType();
+            Type type = entry.Condition.GetType();
 
-            if (type.Name == "ButtonCondition")
+            if (type == typeof(ButtonCondition))
+            {
                 RequireReference(context, entry, "_button", "Button", ValidationSeverity.Error);
-            else if (type.Name == "AwaitCondition")
+            }
+            else if (type == typeof(AwaitCondition))
+            {
                 RequireReference(context, entry, "_step", "StepBase для ожидания", ValidationSeverity.Error);
-            else if (type.Name == "GrabCondition")
+            }
+            else if (type == typeof(GrabCondition))
+            {
                 RequireReference(context, entry, "_hVR_InteractionHelper", "HVR_InteractionHelper", ValidationSeverity.Error);
-            else if (type.Name == "TriggerCondition")
+            }
+            else if (type == typeof(TriggerCondition))
             {
                 RequireReference(context, entry, "_collider", "Collider", ValidationSeverity.Error);
-                IList tags = GetFieldValue(condition, "_tags") as IList;
+                IList tags = GetFieldValue(entry.Condition, "_tags") as IList;
                 if (tags == null || tags.Count == 0)
-                    context.Add("COND030", entry.Location + ": TriggerCondition не содержит ни одного тега; условие не сможет совпасть с объектом.", ValidationSeverity.Warning, target);
+                    context.Add("COND030", entry.Location + ": TriggerCondition не содержит ни одного тега; условие не сможет совпасть с объектом.", ValidationSeverity.Warning, entry.Target);
             }
-            else if (type.Name == "PositionCondition")
+            else if (type == typeof(PositionCondition))
             {
                 RequireReference(context, entry, "itemTransform", "Transform объекта", ValidationSeverity.Error);
                 RequireReference(context, entry, "targetTransform", "Transform цели", ValidationSeverity.Error);
-                object distance = GetFieldValue(condition, "_distance");
+                object distance = GetFieldValue(entry.Condition, "_distance");
                 if (distance is float value && value < 0f)
-                    context.Add("COND031", entry.Location + ": дистанция PositionCondition отрицательная.", ValidationSeverity.Error, target);
+                    context.Add("COND031", entry.Location + ": дистанция PositionCondition отрицательная.", ValidationSeverity.Error, entry.Target);
             }
-            else if (type.Name == "EventCondition")
+            else if (type == typeof(EventCondition))
             {
-                object provider = GetFieldValue(condition, "_stateProvider");
+                object provider = GetFieldValue(entry.Condition, "_stateProvider");
                 if (!(provider is MonoBehaviour behaviour))
-                    context.Add("COND032", entry.Location + ": не назначен MonoBehaviour-поставщик события.", ValidationSeverity.Error, target);
+                    context.Add("COND032", entry.Location + ": не назначен MonoBehaviour-поставщик события.", ValidationSeverity.Error, entry.Target);
                 else
                 {
                     bool implementsProvider = false;
                     foreach (Type implemented in behaviour.GetType().GetInterfaces())
                         if (implemented.FullName == "_Alex.Utils.IBooleanStateProvider") { implementsProvider = true; break; }
                     if (!implementsProvider)
-                        context.Add("COND033", entry.Location + ": компонент _stateProvider не реализует IBooleanStateProvider.", ValidationSeverity.Error, target);
+                        context.Add("COND033", entry.Location + ": компонент _stateProvider не реализует IBooleanStateProvider.", ValidationSeverity.Error, entry.Target);
                 }
+            }
+            else if (type == typeof(ButtonPressCondition))
+            {
+                RequireReference(context, entry, "_hVR_InteractionHelper", "HVR_InteractionHelper", ValidationSeverity.Error);
+                bool right = GetFieldValue(entry.Condition, "_allowRightController") is bool r && r;
+                bool left = GetFieldValue(entry.Condition, "_allowLeftController") is bool l && l;
+                if (!right && !left)
+                    context.Add("COND050", entry.Location + ": ButtonPressCondition запрещает оба контроллера — условие невозможно выполнить.", ValidationSeverity.Error, entry.Target);
+                ValidateEnumField(context, entry, "_buttonType", "тип кнопки контроллера", typeof(ButtonPressCondition.InteractionButtonType), "COND051");
+                ValidateNonNegativeNumber(context, entry, "_holdDuration", "длительность удержания кнопки", "COND052");
+            }
+            else if (type == typeof(WaitCondition))
+            {
+                object modeValue = GetFieldValue(entry.Condition, "mode");
+                int mode = modeValue != null ? Convert.ToInt32(modeValue) : 0;
+                const int knownModes = 1 | 2 | 4;
+                if (mode == 0 || (mode & ~knownModes) != 0)
+                    context.Add("COND053", entry.Location + ": WaitCondition должен иметь хотя бы один корректный режим ожидания (Seconds, Audio, Animation).", ValidationSeverity.Error, entry.Target);
+
+                if ((mode & 1) != 0)
+                    ValidateNonNegativeNumber(context, entry, "waitSeconds", "время ожидания", "COND054");
+                if ((mode & 2) != 0)
+                    RequireReference(context, entry, "waitAudioClip", "AudioClip для режима Audio", ValidationSeverity.Error);
+                if ((mode & 4) != 0)
+                {
+                    RequireReference(context, entry, "animator", "Animator для режима Animation", ValidationSeverity.Error);
+                    if (string.IsNullOrWhiteSpace(GetFieldValue(entry.Condition, "stateName") as string))
+                        context.Add("COND055", entry.Location + ": для режима Animation не задано имя состояния stateName.", ValidationSeverity.Error, entry.Target);
+                    Animator animator = GetFieldValue(entry.Condition, "animator") as Animator;
+                    if (animator != null && animator.runtimeAnimatorController == null)
+                        context.Add("COND056", entry.Location + ": у Animator не назначен RuntimeAnimatorController.", ValidationSeverity.Error, entry.Target);
+                }
+            }
+            else if (type == typeof(DistanceInspectCondition))
+            {
+                RequireReference(context, entry, "_hVR_InteractionHelper", "HVR_InteractionHelper", ValidationSeverity.Error);
+                RequireReference(context, entry, "_indicatorUI", "DistanceInspectionIndicator", ValidationSeverity.Error);
+                object inspectTime = GetFieldValue(entry.Condition, "_inspectTime");
+                if (inspectTime is int seconds && seconds <= 0)
+                    context.Add("COND057", entry.Location + ": _inspectTime должен быть больше нуля, иначе расчёт прогресса осмотра некорректен.", ValidationSeverity.Error, entry.Target);
+            }
+        }
+
+        private static void ValidateEnumField(ValidationContext context, ConditionEntry entry, string fieldName,
+            string readableName, Type enumType, string code)
+        {
+            object value = GetFieldValue(entry.Condition, fieldName);
+            if (value == null || !Enum.IsDefined(enumType, value))
+                context.Add(code, entry.Location + ": неизвестное значение поля " + readableName + ".", ValidationSeverity.Error, entry.Target);
+        }
+
+        private static void ValidateNonNegativeNumber(ValidationContext context, ConditionEntry entry,
+            string fieldName, string readableName, string code)
+        {
+            object value = GetFieldValue(entry.Condition, fieldName);
+            if (value is IConvertible convertible)
+            {
+                try
+                {
+                    if (convertible.ToDouble(null) < 0d)
+                        context.Add(code, entry.Location + ": " + readableName + " не может быть отрицательным.", ValidationSeverity.Error, entry.Target);
+                }
+                catch (Exception) { }
             }
         }
 
@@ -154,7 +221,6 @@ namespace _Core.Editor.ScenarioValidator
         {
             Dictionary<ConditionBase, int> state = new Dictionary<ConditionBase, int>();
             HashSet<ConditionBase> reported = new HashSet<ConditionBase>();
-
             foreach (ConditionBase condition in known)
                 Visit(condition, context, state, reported);
         }
