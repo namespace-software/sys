@@ -51,6 +51,7 @@ namespace ScenarioValidator.Presets
                 temporaryCopy.hideFlags = HideFlags.HideAndDontSave;
 
                 ClearExternalSceneReferences(temporaryCopy, externalReferences);
+                temporaryCopy.hideFlags = HideFlags.None;
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temporaryCopy, prefabPath);
                 if (prefab == null)
                     throw new InvalidOperationException("Unity failed to save the hierarchy as a prefab.");
@@ -111,13 +112,13 @@ namespace ScenarioValidator.Presets
         private static ScenarioPresetReference CreateReference(Transform root, Component owner,
             string propertyPath, UnityEngine.Object target, GameObject targetGameObject)
         {
-            string ownerPath = AnimationUtility.CalculateTransformPath(owner.transform, root);
+            string ownerPath = BuildIndexPath(owner.transform, root);
             Component targetComponent = target as Component;
             bool targetIsGameObject = target is GameObject;
             string targetType = targetComponent != null ? targetComponent.GetType().AssemblyQualifiedName : string.Empty;
             int targetIndex = targetComponent != null ? GetComponentIndex(targetComponent) : -1;
             Transform sceneRoot = GetSceneRoot(targetGameObject.transform);
-            string targetPath = AnimationUtility.CalculateTransformPath(targetGameObject.transform, sceneRoot);
+            string targetPath = BuildIndexPath(targetGameObject.transform, sceneRoot);
             string globalId = GlobalObjectId.GetGlobalObjectIdSlow(target).ToString();
 
             return new ScenarioPresetReference(ownerPath, owner.GetType().AssemblyQualifiedName,
@@ -144,12 +145,44 @@ namespace ScenarioValidator.Presets
 
         internal static Component FindComponent(Transform root, string path, string typeName, int componentIndex)
         {
-            Transform target = string.IsNullOrEmpty(path) ? root : root.Find(path);
+            Transform target = ResolveIndexPath(root, path);
             Type type = Type.GetType(typeName);
             if (target == null || type == null || !typeof(Component).IsAssignableFrom(type))
                 return null;
             Component[] components = target.GetComponents(type);
             return componentIndex >= 0 && componentIndex < components.Length ? components[componentIndex] : null;
+        }
+
+
+        internal static string BuildIndexPath(Transform target, Transform root)
+        {
+            var indices = new System.Collections.Generic.Stack<int>();
+            Transform current = target;
+            while (current != null && current != root)
+            {
+                indices.Push(current.GetSiblingIndex());
+                current = current.parent;
+            }
+            if (current != root)
+                return string.Empty;
+            return string.Join("/", indices);
+        }
+
+        internal static Transform ResolveIndexPath(Transform root, string path)
+        {
+            if (root == null)
+                return null;
+            if (string.IsNullOrEmpty(path))
+                return root;
+            Transform current = root;
+            string[] segments = path.Split('/');
+            foreach (string segment in segments)
+            {
+                if (!int.TryParse(segment, out int index) || index < 0 || index >= current.childCount)
+                    return null;
+                current = current.GetChild(index);
+            }
+            return current;
         }
 
         private static int GetComponentIndex(Component component)
