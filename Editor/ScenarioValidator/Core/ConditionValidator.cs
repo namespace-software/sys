@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using _Core._ScenarioSystem;
 using _Core._ScenarioSystem.Component.Condition;
 using UnityEngine;
 
@@ -176,7 +177,15 @@ namespace _Core.Editor.ScenarioValidator
             if (dependencies != null)
                 foreach (object item in dependencies)
                     if (item is ConditionBase dependency)
+                    {
+                        if (FindEntry(context, dependency) == null)
+                        {
+                            ConditionEntry owner = FindEntry(context, condition);
+                            context.Add("COND042", "Зависимость ссылается на ConditionBase, который не найден в списках условий текущей активной сцены.", ValidationSeverity.Warning,
+                                owner != null ? owner.Target : null);
+                        }
                         Visit(dependency, context, state, reported);
+                    }
             state[condition] = 2;
         }
 
