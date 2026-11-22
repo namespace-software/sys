@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Reflection;
-using System.Collections.Generic;
 using UnityEngine;
 using _Core._ScenarioSystem.Component.Scenario;
 using _Core._ScenarioSystem.Component;
