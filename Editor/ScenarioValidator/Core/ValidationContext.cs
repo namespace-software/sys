@@ -10,17 +10,36 @@ using _Core._ScenarioSystem.Module.Logger;
 using _Core._ScenarioSystem.Module.Mistake;
 using _Core._ScenarioSystem.Module.Tracker.Core;
 using _Core.SoundSystem;
+using _Core._ScenarioSystem.Component.Condition;
 
 namespace _Core.Editor.ScenarioValidator
 {
+    public sealed class ConditionEntry
+    {
+        public ConditionBase Condition { get; }
+        public Object Target { get; }
+        public StepBase OwnerStep { get; }
+        public GroupSteps OwnerGroup { get; }
+        public string Location { get; }
+
+        public ConditionEntry(ConditionBase condition, Object target, StepBase ownerStep, GroupSteps ownerGroup, string location)
+        {
+            Condition = condition;
+            Target = target;
+            OwnerStep = ownerStep;
+            OwnerGroup = ownerGroup;
+            Location = location;
+        }
+    }
+
     public sealed class ValidationContext
     {
         public Scene Scene { get; }
         public GameObject SceneTarget { get; }
-
         public readonly List<ScenarioBase> Scenarios = new List<ScenarioBase>();
         public readonly List<GroupSteps> Groups = new List<GroupSteps>();
         public readonly List<StepBase> Steps = new List<StepBase>();
+        public readonly List<ConditionEntry> Conditions = new List<ConditionEntry>();
 
         public readonly List<ScenarioAudioMediator> AudioMediators = new List<ScenarioAudioMediator>();
         public readonly List<ScenarioSystem> ScenarioSystems = new List<ScenarioSystem>();
@@ -28,7 +47,6 @@ namespace _Core.Editor.ScenarioValidator
         public readonly List<MistakeSystemBase> MistakeSystems = new List<MistakeSystemBase>();
         public readonly List<LogSystem> LogSystems = new List<LogSystem>();
         public readonly List<TrackedManager> TrackedManagers = new List<TrackedManager>();
-
         public ValidationReport Report { get; }
 
         public ValidationContext(Scene scene, ValidationReport report, GameObject sceneTarget)
