@@ -98,7 +98,7 @@ namespace ScenarioValidator.Presets
             foreach (GameObject root in scene.GetRootGameObjects())
             {
                 if (string.IsNullOrEmpty(path)) return root;
-                Transform found = root.transform.Find(path);
+                Transform found = ScenarioPresetCapture.ResolveIndexPath(root.transform, path);
                 if (found != null) return found.gameObject;
             }
             return null;
