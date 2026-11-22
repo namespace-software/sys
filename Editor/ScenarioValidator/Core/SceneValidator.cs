@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using _Core._ScenarioSystem.Component.Group;
+using _Core._ScenarioSystem.Component.Step;
+
 namespace _Core.Editor.ScenarioValidator
 {
-    /// <summary>
-    /// Проверяет минимальные требования, предъявляемые Scenario.Awake().
-    /// На этом этапе правила намеренно ограничены составом сцены.
-    /// </summary>
     public sealed class SceneValidator
     {
         public void Validate(ValidationContext context)
@@ -15,21 +15,55 @@ namespace _Core.Editor.ScenarioValidator
             ValidateRequired(context, "SCENE005", "MistakeSystemBase", context.MistakeSystems.Count);
             ValidateRequired(context, "SCENE006", "LogSystem", context.LogSystems.Count);
             ValidateRequired(context, "SCENE007", "TrackedManager", context.TrackedManagers.Count);
+
+            foreach (GroupSteps group in context.Groups)
+            {
+                List<StepBase> directSteps = new List<StepBase>();
+                int nestedSteps = 0;
+                for (int i = 0; i < group.transform.childCount; i++)
+                {
+                    Transform child = group.transform.GetChild(i);
+                    StepBase direct = child.GetComponent<StepBase>();
+                    if (direct != null) directSteps.Add(direct);
+                    nestedSteps += child.GetComponentsInChildren<StepBase>(true).Length - (direct != null ? 1 : 0);
+                }
+
+                if (directSteps.Count == 0)
+                    context.Add("GROUP001", "Группа не содержит StepBase среди непосредственных дочерних объектов. Runtime GroupSteps собирает только прямых детей.", ValidationSeverity.Error, group);
+                if (nestedSteps > 0)
+                    context.Add("GROUP002", "Внутри группы найдены вложенные StepBase, которые Runtime GroupSteps не добавит в Steps.", ValidationSeverity.Warning, group);
+
+                var indexes = new HashSet<int>();
+                foreach (StepBase step in directSteps)
+                    if (!indexes.Add(step.StepIndex))
+                        context.Add("GROUP003", "В группе повторяется индекс шага " + step.StepIndex + ".", ValidationSeverity.Warning, step);
+            }
+
+            foreach (StepBase step in context.Steps)
+            {
+                if (string.IsNullOrWhiteSpace(step.StepName))
+                    context.Add("STEP001", "Не задано имя шага (StepName).", ValidationSeverity.Warning, step);
+                if (step.startInstructions == null)
+                    context.Add("STEP002", "Не задан объект startInstructions. Runtime-код может обратиться к нему без проверки null.", ValidationSeverity.Error, step);
+                else if (string.IsNullOrWhiteSpace(step.startInstructions.instructionText))
+                    context.Add("STEP003", "Не задан текст стартовой инструкции шага.", ValidationSeverity.Warning, step);
+                if (step.successInstructions == null)
+                    context.Add("STEP004", "Не задан объект successInstructions.", ValidationSeverity.Warning, step);
+                if (step.mistakeInstructions == null)
+                    context.Add("STEP005", "Не задан объект mistakeInstructions. LogSystem обращается к нему без проверки null.", ValidationSeverity.Error, step);
+                if (step.conditions == null)
+                    context.Add("STEP006", "Список conditions равен null.", ValidationSeverity.Error, step);
+                else if (step.conditions.Count == 0)
+                    context.Add("STEP007", "У шага нет условий. Проверьте, предусмотрено ли завершение шага без ConditionBase.", ValidationSeverity.Warning, step);
+            }
         }
 
-        private static void ValidateRequired(ValidationContext context, string code, string componentName, int count)
+        private static void ValidateRequired(ValidationContext context, string code, string name, int count)
         {
             if (count == 0)
-            {
-                context.Add(code, "В активной сцене отсутствует обязательный компонент " + componentName + ".",
-                    ValidationSeverity.Error);
-            }
+                context.Add(code, "В активной сцене отсутствует обязательный компонент " + name + ".", ValidationSeverity.Error);
             else if (count > 1)
-            {
-                context.Add(code, "В активной сцене найдено несколько компонентов " + componentName +
-                                  " (" + count + "). Runtime-код использует FindFirstObjectByType, поэтому выбор экземпляра неоднозначен.",
-                    ValidationSeverity.Warning);
-            }
+                context.Add(code, "В активной сцене найдено несколько компонентов " + name + " (" + count + "). Runtime использует FindFirstObjectByType, поэтому выбор неоднозначен.", ValidationSeverity.Warning);
         }
     }
 }
