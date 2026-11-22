@@ -9,7 +9,7 @@ namespace ScenarioTools.Presets
 {
     public static class ScenarioPresetInstantiator
     {
-        public static GameObject Instantiate(ScenarioPreset preset, Scene targetScene = default)
+        public static GameObject Instantiate(ScenarioPreset preset, Scene targetScene = default, Transform parent = null)
         {
             if (preset == null || preset.Prefab == null)
             {
@@ -17,9 +17,12 @@ namespace ScenarioTools.Presets
                 return null;
             }
 
-            GameObject instance = targetScene.IsValid()
-                ? PrefabUtility.InstantiatePrefab(preset.Prefab, targetScene) as GameObject
-                : PrefabUtility.InstantiatePrefab(preset.Prefab) as GameObject;
+            Scene scene = parent != null ? parent.gameObject.scene : targetScene;
+            GameObject instance = parent != null
+                ? PrefabUtility.InstantiatePrefab(preset.Prefab, parent) as GameObject
+                : scene.IsValid()
+                    ? PrefabUtility.InstantiatePrefab(preset.Prefab, scene) as GameObject
+                    : PrefabUtility.InstantiatePrefab(preset.Prefab) as GameObject;
             if (instance == null)
             {
                 Debug.LogError($"[Scenario Presets] Failed to instantiate '{preset.DisplayName}'.", preset);
@@ -36,7 +39,6 @@ namespace ScenarioTools.Presets
             }
 
             EditorSceneManager.MarkSceneDirty(instance.scene);
-            Selection.activeGameObject = instance;
             if (unresolved == 0)
                 Debug.Log($"[Scenario Presets] Added '{preset.DisplayName}'. Restored references: {restored}.", instance);
             else
