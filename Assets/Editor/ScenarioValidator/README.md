@@ -12,7 +12,7 @@ The validator scans only `SceneManager.GetActiveScene()`, including inactive Gam
 - Step name, service type, instruction data and conditions collection.
 - Managed-reference conditions in StepBase, GroupSteps and Scenario permanent conditions.
 - Common condition instruction data, service/mistake enum values, dependency configuration, self/duplicate references and dependency cycles.
-- Known condition-specific references for ButtonCondition, AwaitCondition, GrabCondition, TriggerCondition, PositionCondition and EventCondition.
+- Known condition-specific checks for ButtonCondition, AwaitCondition, GrabCondition, TriggerCondition, PositionCondition, EventCondition, ButtonPressCondition, WaitCondition and DistanceInspectCondition.
 
 ## Severity
 
@@ -24,7 +24,7 @@ Some checks deliberately remain warnings because the runtime system permits proj
 
 ## Adding rules
 
-Add scene/group/step rules to `Core/SceneValidator.cs`. Add shared and condition-specific checks to `Core/ConditionValidator.cs`. Condition objects are plain managed references; the report target is the owning Unity object so the user can select it in the Hierarchy/Inspector.
+Add scene/group/step rules to `Core/SceneValidator.cs`. Add shared checks and dependency-graph rules to `Core/ConditionValidator.cs`. Specific condition checks belong in `Core/ConditionValidators/` and implement `IConditionValidator`. Register the validator in `ConditionValidatorCatalog` using the exact condition type. The catalog also exposes `Register<TCondition>()`, `Unregister<TCondition>()` and `HasValidator<TCondition>()` for editor extensions. The default catalog is initialized with built-in validators. A type without a registered validator is skipped for type-specific checks; common checks still run. Condition objects are plain managed references; the report target is the owning Unity object so the user can select it in the Hierarchy/Inspector.
 
 
 ### Дополнительные типы условий и провайдеры
