@@ -11,11 +11,15 @@ namespace ScenarioTools.Presets
         [SerializeField, TextArea(2, 5)] private string _description;
         [SerializeField] private GameObject _prefab;
         [SerializeField] private List<ScenarioPresetReference> _externalReferences = new();
+        [SerializeField] private bool _isComposite;
+        [SerializeField] private List<ScenarioPresetPart> _parts = new();
 
         public string DisplayName => string.IsNullOrWhiteSpace(_displayName) ? name : _displayName;
         public string Description => _description;
         public GameObject Prefab => _prefab;
         public IReadOnlyList<ScenarioPresetReference> ExternalReferences => _externalReferences;
+        public bool IsComposite => _isComposite;
+        public IReadOnlyList<ScenarioPresetPart> Parts => _parts;
 
         public void Initialize(string displayName, string description, GameObject prefab,
             List<ScenarioPresetReference> externalReferences)
@@ -24,6 +28,40 @@ namespace ScenarioTools.Presets
             _description = description ?? string.Empty;
             _prefab = prefab;
             _externalReferences = externalReferences ?? new List<ScenarioPresetReference>();
+            _isComposite = false;
+            _parts = new List<ScenarioPresetPart>();
+        }
+
+        public void InitializeComposite(string displayName, string description, List<ScenarioPresetPart> parts)
+        {
+            _displayName = displayName;
+            _description = description ?? string.Empty;
+            _prefab = null;
+            _externalReferences = new List<ScenarioPresetReference>();
+            _isComposite = true;
+            _parts = parts ?? new List<ScenarioPresetPart>();
+        }
+    }
+
+    [Serializable]
+    public sealed class ScenarioPresetPart
+    {
+        [SerializeField] private ScenarioPreset _preset;
+        [SerializeField] private Vector3 _localPosition;
+        [SerializeField] private Vector3 _localEulerAngles;
+        [SerializeField] private Vector3 _localScale = Vector3.one;
+
+        public ScenarioPreset Preset => _preset;
+        public Vector3 LocalPosition => _localPosition;
+        public Vector3 LocalEulerAngles => _localEulerAngles;
+        public Vector3 LocalScale => _localScale;
+
+        public ScenarioPresetPart(ScenarioPreset preset, Vector3 localPosition, Vector3 localEulerAngles, Vector3 localScale)
+        {
+            _preset = preset;
+            _localPosition = localPosition;
+            _localEulerAngles = localEulerAngles;
+            _localScale = localScale;
         }
     }
 
