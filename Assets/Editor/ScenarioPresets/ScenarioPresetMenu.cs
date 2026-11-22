@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 
-namespace ScenarioValidator.Presets
+namespace ScenarioTools.Presets
 {
     public static class ScenarioPresetMenu
     {
