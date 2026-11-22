@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Reflection;
+using _Core._ScenarioSystem.Component.Scenario;
 using _Core._ScenarioSystem.Component;
 using _Core._ScenarioSystem.Component.Group;
 using _Core._ScenarioSystem.Component.Step;
@@ -16,6 +18,14 @@ namespace _Core.Editor.ScenarioValidator
             ValidateRequired(context, "SCENE005", "MistakeSystemBase", context.MistakeSystems.Count);
             ValidateRequired(context, "SCENE006", "LogSystem", context.LogSystems.Count);
             ValidateRequired(context, "SCENE007", "TrackedManager", context.TrackedManagers.Count);
+
+            foreach (ScenarioBase scenario in context.Scenarios)
+            {
+                FieldInfo permanentField = typeof(ScenarioBase).GetField("_permanentConditions",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (permanentField != null && permanentField.GetValue(scenario) == null)
+                    context.Add("SCENE008", "Список _permanentConditions равен null; ScenarioBase.OnValidate обращается к нему без null-проверки.", ValidationSeverity.Error, scenario);
+            }
 
             foreach (GroupSteps group in context.Groups)
             {
@@ -58,7 +68,7 @@ namespace _Core.Editor.ScenarioValidator
                 else if (string.IsNullOrWhiteSpace(step.startInstructions.instructionText))
                     context.Add("STEP003", "Не задан текст стартовой инструкции шага.", ValidationSeverity.Warning, step);
                 if (step.successInstructions == null)
-                    context.Add("STEP004", "Не задан объект successInstructions.", ValidationSeverity.Warning, step);
+                    context.Add("STEP004", "Не задан объект successInstructions. LogSystem обращается к нему без проверки null.", ValidationSeverity.Error, step);
                 if (step.mistakeInstructions == null)
                     context.Add("STEP005", "Не задан объект mistakeInstructions. LogSystem обращается к нему без проверки null.", ValidationSeverity.Error, step);
                 if (step.conditions == null)
