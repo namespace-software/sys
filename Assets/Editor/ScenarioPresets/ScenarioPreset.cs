@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ScenarioValidator.Presets
+namespace ScenarioTools.Presets
 {
     public sealed class ScenarioPreset : ScriptableObject
     {
