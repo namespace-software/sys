@@ -5,7 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScenarioValidator.Presets
+namespace ScenarioTools.Presets
 {
     public static class ScenarioPresetCapture
     {
