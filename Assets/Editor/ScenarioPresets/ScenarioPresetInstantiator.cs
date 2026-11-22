@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace ScenarioValidator.Presets
+namespace ScenarioTools.Presets
 {
     public static class ScenarioPresetInstantiator
     {
@@ -49,7 +49,7 @@ namespace ScenarioValidator.Presets
             Component owner = ScenarioPresetCapture.FindComponent(instance.transform, reference.OwnerPath,
                 reference.OwnerComponentType, reference.OwnerComponentIndex);
             if (owner == null) return false;
-            UnityEngine.Object target = ResolveTarget(reference);
+            UnityEngine.Object target = ResolveTarget(reference, instance.scene);
             if (target == null) return false;
 
             var serializedObject = new SerializedObject(owner);
@@ -61,16 +61,16 @@ namespace ScenarioValidator.Presets
             return true;
         }
 
-        private static UnityEngine.Object ResolveTarget(ScenarioPresetReference reference)
+        private static UnityEngine.Object ResolveTarget(ScenarioPresetReference reference, Scene targetScene)
         {
             if (!string.IsNullOrEmpty(reference.TargetGlobalObjectId) &&
                 GlobalObjectId.TryParse(reference.TargetGlobalObjectId, out GlobalObjectId globalId))
             {
                 UnityEngine.Object target = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(globalId);
-                if (IsCompatibleTarget(target, reference)) return target;
+                if (IsCompatibleTarget(target, reference) && IsInExpectedScene(target, reference)) return target;
             }
 
-            Scene scene = SceneManager.GetActiveScene();
+            Scene scene = targetScene.IsValid() ? targetScene : SceneManager.GetActiveScene();
             if (!string.IsNullOrEmpty(reference.TargetScenePath) && scene.path != reference.TargetScenePath)
                 return null;
             GameObject targetObject = FindGameObjectByPath(scene, reference.TargetHierarchyPath);
@@ -82,6 +82,12 @@ namespace ScenarioValidator.Presets
             Component[] components = targetObject.GetComponents(type);
             int index = reference.TargetComponentIndex;
             return index >= 0 && index < components.Length ? components[index] : null;
+        }
+
+        private static bool IsInExpectedScene(UnityEngine.Object target, ScenarioPresetReference reference)
+        {
+            GameObject go = target is GameObject gameObject ? gameObject : (target as Component)?.gameObject;
+            return go != null && (string.IsNullOrEmpty(reference.TargetScenePath) || go.scene.path == reference.TargetScenePath);
         }
 
         private static bool IsCompatibleTarget(UnityEngine.Object target, ScenarioPresetReference reference)
