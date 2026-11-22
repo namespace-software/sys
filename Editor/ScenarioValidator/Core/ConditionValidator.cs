@@ -42,8 +42,8 @@ namespace _Core.Editor.ScenarioValidator
 
             if (condition.mistakeInstructions == null)
                 context.Add("COND012", entry.Location + ": не задан mistakeInstructions; LogSystem использует это поле.", ValidationSeverity.Error, target);
-            if (!condition.isPermanent && condition.successInstructions == null)
-                context.Add("COND013", entry.Location + ": не задан successInstructions.", ValidationSeverity.Warning, target);
+            if (condition.successInstructions == null)
+                context.Add("COND013", entry.Location + ": не задан successInstructions. LogSystem обращается к нему без проверки null.", ValidationSeverity.Error, target);
 
             if (!Enum.IsDefined(typeof(_Core._ScenarioSystem.Component.ServiceType), condition.ServiceType))
                 context.Add("COND014", entry.Location + ": неизвестное значение ServiceType.", ValidationSeverity.Error, target);
