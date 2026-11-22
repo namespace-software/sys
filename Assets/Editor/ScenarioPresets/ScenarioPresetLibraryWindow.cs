@@ -12,10 +12,7 @@ namespace ScenarioTools.Presets
         private string _search = string.Empty;
 
         [MenuItem("Tools/Scenario Presets/Library", false, 30)]
-        public static void Open()
-        {
-            GetWindow<ScenarioPresetLibraryWindow>("Scenario Presets");
-        }
+        public static void Open() => GetWindow<ScenarioPresetLibraryWindow>("Scenario Presets");
 
         private void OnGUI()
         {
@@ -26,10 +23,7 @@ namespace ScenarioTools.Presets
                 if (GUILayout.Button("Refresh", GUILayout.Width(70))) Repaint();
             }
 
-            EditorGUILayout.HelpBox(
-                "Select one configured root GameObject in the Hierarchy and use " +
-                "GameObject > Scenario > Save Selection as Preset to create a preset.",
-                MessageType.Info);
+            EditorGUILayout.HelpBox("Select configured presets in the Project window and use Assets > Create > Scenario Presets > Composite to combine them.", MessageType.Info);
             _search = EditorGUILayout.TextField("Search", _search);
             EditorGUILayout.Space(4);
 
@@ -55,20 +49,23 @@ namespace ScenarioTools.Presets
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.ObjectField(preset, typeof(ScenarioPreset), false,
-                        GUILayout.Width(70), GUILayout.Height(64));
+                    EditorGUILayout.ObjectField(preset, typeof(ScenarioPreset), false, GUILayout.Width(70), GUILayout.Height(64));
                     using (new EditorGUILayout.VerticalScope())
                     {
                         EditorGUILayout.LabelField(preset.DisplayName, EditorStyles.boldLabel);
                         if (!string.IsNullOrWhiteSpace(preset.Description))
                             EditorGUILayout.LabelField(preset.Description, EditorStyles.wordWrappedMiniLabel);
-                        EditorGUILayout.LabelField("External references: " + preset.ExternalReferences.Count, EditorStyles.miniLabel);
-                        if (preset.Prefab == null) EditorGUILayout.HelpBox("Prefab asset is missing.", MessageType.Error);
+                        EditorGUILayout.LabelField(preset.IsComposite
+                            ? $"Composite · {preset.Parts.Count} parts"
+                            : $"External references: {preset.ExternalReferences.Count}", EditorStyles.miniLabel);
+                        if (!preset.IsComposite && preset.Prefab == null)
+                            EditorGUILayout.HelpBox("Prefab asset is missing.", MessageType.Error);
                     }
                 }
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    if (GUILayout.Button("Add to Scene", GUILayout.Height(24)) && preset.Prefab != null)
+                    if (GUILayout.Button("Add to Scene", GUILayout.Height(24)) &&
+                        (preset.IsComposite ? preset.Parts.Count > 0 : preset.Prefab != null))
                         ScenarioPresetInstantiator.Instantiate(preset);
                     if (GUILayout.Button("Select Asset", GUILayout.Width(95), GUILayout.Height(24)))
                     {
