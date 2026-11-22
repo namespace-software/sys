@@ -50,8 +50,10 @@ namespace _Core.Editor.ScenarioValidator
             if (!Enum.IsDefined(typeof(EnumMistakeType), condition.mistakeType))
                 context.Add("COND015", entry.Location + ": неизвестное значение mistakeType.", ValidationSeverity.Warning, target);
 
+            if (!condition.hasDependencies) return;
+
             IList dependencies = GetDependencies(condition);
-            if (condition.hasDependencies && (dependencies == null || dependencies.Count == 0))
+            if (dependencies == null || dependencies.Count == 0)
                 context.Add("COND016", entry.Location + ": hasDependencies включён, но список зависимостей пуст или null.", ValidationSeverity.Error, target);
 
             if (dependencies == null) return;
@@ -173,7 +175,7 @@ namespace _Core.Editor.ScenarioValidator
             }
 
             state[condition] = 1;
-            IList dependencies = GetDependencies(condition);
+            IList dependencies = condition.hasDependencies ? GetDependencies(condition) : null;
             if (dependencies != null)
                 foreach (object item in dependencies)
                     if (item is ConditionBase dependency)
