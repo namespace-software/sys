@@ -118,7 +118,7 @@ namespace ScenarioTools.Presets
             string targetType = targetComponent != null ? targetComponent.GetType().AssemblyQualifiedName : string.Empty;
             int targetIndex = targetComponent != null ? GetComponentIndex(targetComponent) : -1;
             Transform sceneRoot = GetSceneRoot(targetGameObject.transform);
-            string targetPath = BuildIndexPath(targetGameObject.transform, sceneRoot);
+            string targetPath = BuildScenePath(targetGameObject.transform, sceneRoot);
             string globalId = GlobalObjectId.GetGlobalObjectIdSlow(target).ToString();
 
             return new ScenarioPresetReference(ownerPath, owner.GetType().AssemblyQualifiedName,
@@ -153,6 +153,12 @@ namespace ScenarioTools.Presets
             return componentIndex >= 0 && componentIndex < components.Length ? components[componentIndex] : null;
         }
 
+
+
+        internal static string BuildScenePath(Transform target, Transform sceneRoot)
+        {
+            return sceneRoot.GetSiblingIndex() + "/" + BuildIndexPath(target, sceneRoot);
+        }
 
         internal static string BuildIndexPath(Transform target, Transform root)
         {
