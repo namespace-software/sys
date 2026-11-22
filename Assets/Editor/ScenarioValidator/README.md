@@ -25,3 +25,11 @@ Some checks deliberately remain warnings because the runtime system permits proj
 ## Adding rules
 
 Add scene/group/step rules to `Core/SceneValidator.cs`. Add shared and condition-specific checks to `Core/ConditionValidator.cs`. Condition objects are plain managed references; the report target is the owning Unity object so the user can select it in the Hierarchy/Inspector.
+
+
+### Дополнительные типы условий и провайдеры
+
+- `ButtonPressCondition`: назначен `HVR_InteractionHelper`, разрешён хотя бы один контроллер, корректный тип кнопки, неотрицательное время удержания.
+- `WaitCondition`: задан корректный режим; для Seconds — неотрицательное время, для Audio — AudioClip, для Animation — Animator, имя состояния и RuntimeAnimatorController.
+- `DistanceInspectCondition`: назначены `HVR_InteractionHelper` и `DistanceInspectionIndicator`, время осмотра больше нуля.
+- `SocketFilledProvider` (компонент-провайдер, не `ConditionBase`): назначен `HVRSocket`.
