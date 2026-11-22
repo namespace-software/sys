@@ -40,6 +40,7 @@ namespace _Core.Editor.ScenarioValidator
         public readonly List<GroupSteps> Groups = new List<GroupSteps>();
         public readonly List<StepBase> Steps = new List<StepBase>();
         public readonly List<ConditionEntry> Conditions = new List<ConditionEntry>();
+        public readonly List<SocketFilledProvider> SocketFilledProviders = new List<SocketFilledProvider>();
 
         public readonly List<ScenarioAudioMediator> AudioMediators = new List<ScenarioAudioMediator>();
         public readonly List<_Core._ScenarioSystem.ScenarioSystem> ScenarioSystems = new List<_Core._ScenarioSystem.ScenarioSystem>();
