@@ -33,6 +33,7 @@ namespace _Core.Editor.ScenarioValidator
                 context.MistakeSystems.AddRange(root.GetComponentsInChildren<MistakeSystemBase>(true));
                 context.LogSystems.AddRange(root.GetComponentsInChildren<LogSystem>(true));
                 context.TrackedManagers.AddRange(root.GetComponentsInChildren<TrackedManager>(true));
+                context.SocketFilledProviders.AddRange(root.GetComponentsInChildren<SocketFilledProvider>(true));
             }
 
             foreach (StepBase step in context.Steps)
