@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Reflection;
+using System.Collections.Generic;
+using UnityEngine;
 using _Core._ScenarioSystem.Component.Scenario;
 using _Core._ScenarioSystem.Component;
 using _Core._ScenarioSystem.Component.Group;
@@ -11,13 +13,13 @@ namespace _Core.Editor.ScenarioValidator
     {
         public void Validate(ValidationContext context)
         {
-            ValidateRequired(context, "SCENE001", "Scenario", context.Scenarios.Count);
-            ValidateRequired(context, "SCENE002", "ScenarioAudioMediator", context.AudioMediators.Count);
-            ValidateRequired(context, "SCENE003", "ScenarioSystem", context.ScenarioSystems.Count);
-            ValidateRequired(context, "SCENE004", "HintsSystem", context.HintsSystems.Count);
-            ValidateRequired(context, "SCENE005", "MistakeSystemBase", context.MistakeSystems.Count);
-            ValidateRequired(context, "SCENE006", "LogSystem", context.LogSystems.Count);
-            ValidateRequired(context, "SCENE007", "TrackedManager", context.TrackedManagers.Count);
+            ValidateRequired(context, "SCENE001", "Scenario", context.Scenarios);
+            ValidateRequired(context, "SCENE002", "ScenarioAudioMediator", context.AudioMediators);
+            ValidateRequired(context, "SCENE003", "ScenarioSystem", context.ScenarioSystems);
+            ValidateRequired(context, "SCENE004", "HintsSystem", context.HintsSystems);
+            ValidateRequired(context, "SCENE005", "MistakeSystemBase", context.MistakeSystems);
+            ValidateRequired(context, "SCENE006", "LogSystem", context.LogSystems);
+            ValidateRequired(context, "SCENE007", "TrackedManager", context.TrackedManagers);
 
             foreach (ScenarioBase scenario in context.Scenarios)
             {
@@ -78,12 +80,23 @@ namespace _Core.Editor.ScenarioValidator
             }
         }
 
-        private static void ValidateRequired(ValidationContext context, string code, string name, int count)
+        private static void ValidateRequired<T>(ValidationContext context, string code, string name, IList<T> components)
+            where T : Component
         {
-            if (count == 0)
-                context.Add(code, "В активной сцене отсутствует обязательный компонент " + name + ".", ValidationSeverity.Error);
-            else if (count > 1)
-                context.Add(code, "В активной сцене найдено несколько компонентов " + name + " (" + count + "). Runtime использует FindFirstObjectByType, поэтому выбор неоднозначен.", ValidationSeverity.Warning);
+            int activeCount = 0;
+            for (int i = 0; i < components.Count; i++)
+                if (components[i] != null && components[i].gameObject.activeInHierarchy)
+                    activeCount++;
+
+            if (activeCount == 0)
+            {
+                string detail = components.Count == 0
+                    ? "Компонент отсутствует в активной сцене."
+                    : "Компонент найден только на неактивных GameObject; FindFirstObjectByType по умолчанию такие объекты не находит.";
+                context.Add(code, "Не найден доступный обязательный компонент " + name + ". " + detail, ValidationSeverity.Error);
+            }
+            else if (activeCount > 1)
+                context.Add(code, "В активной иерархии найдено несколько компонентов " + name + " (" + activeCount + "). Runtime использует FindFirstObjectByType, поэтому выбор неоднозначен.", ValidationSeverity.Warning);
         }
     }
 }
