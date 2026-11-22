@@ -20,6 +20,13 @@ namespace _Core.Editor.ScenarioValidator
             ValidateRequired(context, "SCENE006", "LogSystem", context.LogSystems);
             ValidateRequired(context, "SCENE007", "TrackedManager", context.TrackedManagers);
 
+            foreach (SocketFilledProvider provider in context.SocketFilledProviders)
+            {
+                FieldInfo socketField = provider.GetType().GetField("_socket", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (socketField == null || socketField.GetValue(provider) == null)
+                    context.Add("PROVIDER001", "SocketFilledProvider: не назначен HVRSocket (_socket). Компонент обращается к нему в Awake().", ValidationSeverity.Error, provider);
+            }
+
             foreach (ScenarioBase scenario in context.Scenarios)
             {
                 FieldInfo permanentField = typeof(ScenarioBase).GetField("_permanentConditions",
