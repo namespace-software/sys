@@ -106,7 +106,7 @@ namespace _Core.Editor.ScenarioValidator
                 {
                     bool implementsProvider = false;
                     foreach (Type implemented in behaviour.GetType().GetInterfaces())
-                        if (implemented.Name == "IBooleanStateProvider") { implementsProvider = true; break; }
+                        if (implemented.FullName == "_Alex.Utils.IBooleanStateProvider") { implementsProvider = true; break; }
                     if (!implementsProvider)
                         context.Add("COND033", entry.Location + ": компонент _stateProvider не реализует IBooleanStateProvider.", ValidationSeverity.Error, target);
                 }
