@@ -101,13 +101,15 @@ namespace ScenarioTools.Presets
         private static GameObject FindGameObjectByPath(Scene scene, string path)
         {
             if (!scene.IsValid() || !scene.isLoaded) return null;
-            foreach (GameObject root in scene.GetRootGameObjects())
-            {
-                if (string.IsNullOrEmpty(path)) return root;
-                Transform found = ScenarioPresetCapture.ResolveIndexPath(root.transform, path);
-                if (found != null) return found.gameObject;
-            }
-            return null;
+            string[] segments = path.Split('/');
+            if (segments.Length == 0 || !int.TryParse(segments[0], out int rootIndex))
+                return null;
+            GameObject[] roots = scene.GetRootGameObjects();
+            if (rootIndex < 0 || rootIndex >= roots.Length)
+                return null;
+            string childPath = string.Join("/", segments, 1, segments.Length - 1);
+            Transform found = ScenarioPresetCapture.ResolveIndexPath(roots[rootIndex].transform, childPath);
+            return found != null ? found.gameObject : null;
         }
     }
 }
