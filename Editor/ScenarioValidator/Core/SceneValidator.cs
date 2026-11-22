@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _Core._ScenarioSystem.Component;
 using _Core._ScenarioSystem.Component.Group;
 using _Core._ScenarioSystem.Component.Step;
 
@@ -18,6 +19,9 @@ namespace _Core.Editor.ScenarioValidator
 
             foreach (GroupSteps group in context.Groups)
             {
+                if (string.IsNullOrWhiteSpace(group.Description))
+                    context.Add("GROUP000", "Не задано описание группы (Description).", ValidationSeverity.Info, group);
+
                 List<StepBase> directSteps = new List<StepBase>();
                 int nestedSteps = 0;
                 for (int i = 0; i < group.transform.childCount; i++)
@@ -33,16 +37,22 @@ namespace _Core.Editor.ScenarioValidator
                 if (nestedSteps > 0)
                     context.Add("GROUP002", "Внутри группы найдены вложенные StepBase, которые Runtime GroupSteps не добавит в Steps.", ValidationSeverity.Warning, group);
 
-                var indexes = new HashSet<int>();
+                HashSet<int> indexes = new HashSet<int>();
                 foreach (StepBase step in directSteps)
                     if (!indexes.Add(step.StepIndex))
                         context.Add("GROUP003", "В группе повторяется индекс шага " + step.StepIndex + ".", ValidationSeverity.Warning, step);
+
+                if (group.Conditions == null)
+                    context.Add("GROUP004", "Массив завершающих Conditions равен null; методы группы обращаются к нему без null-проверки.", ValidationSeverity.Error, group);
             }
 
             foreach (StepBase step in context.Steps)
             {
                 if (string.IsNullOrWhiteSpace(step.StepName))
                     context.Add("STEP001", "Не задано имя шага (StepName).", ValidationSeverity.Warning, step);
+                if (!System.Enum.IsDefined(typeof(ServiceType), step.ServiceType))
+                    context.Add("STEP008", "Неизвестное значение ServiceType.", ValidationSeverity.Error, step);
+
                 if (step.startInstructions == null)
                     context.Add("STEP002", "Не задан объект startInstructions. Runtime-код может обратиться к нему без проверки null.", ValidationSeverity.Error, step);
                 else if (string.IsNullOrWhiteSpace(step.startInstructions.instructionText))
