@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScenarioValidator.Presets
+namespace ScenarioTools.Presets
 {
     public sealed class ScenarioPresetLibraryWindow : EditorWindow
     {
