@@ -94,6 +94,11 @@ namespace Project.EditorTools
 
                 blueprint = ScriptableObject.CreateInstance<ObiRopeBlueprint>();
                 blueprint.name = Path.GetFileNameWithoutExtension(assetPath);
+
+                // Obi 6.5.4 creates ParticleGroup sub-assets from ControlPointAdded.
+                // The blueprint must already be a persistent asset before path points are added.
+                AssetDatabase.CreateAsset(blueprint, assetPath);
+
                 blueprint.resolution = resolution;
                 blueprint.thickness = ropeThickness;
                 blueprint.path.Clear();
@@ -102,7 +107,7 @@ namespace Project.EditorTools
                 blueprint.path.FlushEvents();
                 blueprint.GenerateImmediate();
 
-                AssetDatabase.CreateAsset(blueprint, assetPath);
+                EditorUtility.SetDirty(blueprint);
                 AssetDatabase.SaveAssets();
 
                 var rope = ropeObject.AddComponent<ObiRope>();
@@ -135,7 +140,9 @@ namespace Project.EditorTools
                 if (ropeObject != null)
                     Undo.DestroyObjectImmediate(ropeObject);
 
-                if (blueprint != null && !AssetDatabase.Contains(blueprint))
+                if (!string.IsNullOrEmpty(assetPath) && AssetDatabase.LoadMainAssetAtPath(assetPath) != null)
+                    AssetDatabase.DeleteAsset(assetPath);
+                else if (blueprint != null)
                     DestroyImmediate(blueprint);
 
                 Debug.LogException(exception);
